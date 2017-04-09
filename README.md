@@ -2,7 +2,7 @@ Introduction
 ============
 
 **ThaNerd Parts** -- is a web based electronics components stock management package. It is at first made for a single individual, and plans are to make it suitable for small communities like members of a hacker space.
-It is meant to run on any web server with PHP and MySQL, and based on **[AdminLTE](https://almsaeedstudio.com/themes/AdminLTE/)**.
+It is meant to run on any web server with PHP and MySQL, and it is based on **[AdminLTE](https://almsaeedstudio.com/themes/AdminLTE/)**.
 
 Installation
 ------------

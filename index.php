@@ -1,5 +1,11 @@
 <?php
 
+require( dirname( __FILE__ ) . '/tnp-header.php' );
+require( dirname( __FILE__ ) . '/config.php' );
+require_once ( dirname( __FILE__ ) . '/mysqlHelper/MysqliDb.php');
+
+$db = new MysqliDb (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
+
 
 
 ?><!DOCTYPE html>
@@ -251,10 +257,38 @@ desired effect
 
       <!-- Sidebar Menu -->
       <ul class="sidebar-menu">
-        <li class="header">PARTS</li>
+        <li class="header">Categories</li>
         <!-- Optionally, you can add icons to the links -->
-        <li class="active"><a href="#"><i class="fa fa-link"></i> <span>Projects BOM</span></a></li>
-        <li><a href="#"><i class="fa fa-link"></i> <span>Manage Orders</span></a></li>
+        <li class="active"><a href="#"><i class="fa fa-link"></i> <span>All parts</span></a></li>
+        <?php
+        $db->where('parent', NULL, 'IS');
+        $rootCat = $db->get("Categories");
+        //print_r($rootCat);
+        if($db->count == 0) {
+          // No categories defined
+        } else {
+          foreach ($rootCat as $cat) {
+            $db->where('parent', $cat['id']);
+            $subCats = $db->get('Categories');
+
+            print('<li class="treeview">');
+            print(' <a href="#"><i class="fa fa-folder-o"></i> <span>' . $cat['name'] . '</span>');
+            if($db->count > 0) { 
+              print('   <span class="pull-right-container">');
+              print('     <i class="fa fa-angle-left pull-right"></i>');
+              print('   </span>');
+            }
+            print(' </a>');
+            if($db->count > 0) {
+              print('<ul class="treeview-menu">');
+              foreach ($subCats as $subCat) {
+                print('<li><a href="#">' . $subCat['name'] . '</a></li>');
+              }
+              print('</ul>');
+            }
+          }
+
+        ?>
         <li class="treeview">
           <a href="#"><i class="fa fa-link"></i> <span>Manage Components</span>
             <span class="pull-right-container">
@@ -267,6 +301,7 @@ desired effect
             <li><a href="#">Store components</a></li>
           </ul>
         </li>
+      <?php } ?>
       </ul>
       <!-- /.sidebar-menu -->
     </section>
@@ -329,22 +364,59 @@ desired effect
   </div>
 
 
-  <div class="box">
-  <div class="box-header with-border">
-    <h3 class="box-title">PHP Info</h3>
-    <div class="box-tools pull-right">
-      <!-- Buttons, labels, and many other things can be placed here! -->
-      <!-- Here is a label for example -->
-      <span class="label label-primary">Unsafe</span>
-    </div><!-- /.box-tools -->
-  </div><!-- /.box-header -->
-  <div class="box-body">
-    <?php //phpinfo(); ?>
-  </div><!-- /.box-body -->
-  <div class="box-footer">
-    The footer of the box
-  </div><!-- box-footer -->
-</div><!-- /.box -->
+<div class="row">
+        <div class="col-xs-12">
+          <div class="box">
+            <div class="box-header">
+              <h3 class="box-title">List of components</h3>
+
+              <div class="box-tools">
+                <div class="input-group input-group-sm" style="width: 150px;">
+                  <input type="text" name="table_search" class="form-control pull-right" placeholder="Search">
+
+                  <div class="input-group-btn">
+                    <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body table-responsive no-padding">
+              <table class="table table-hover">
+                <tbody><tr>
+                  <th>Name</th>
+                  <th>Stock</th>
+                  <th>Description</th>
+                  <th>Footprint</th>
+                  <th>Reason</th>
+                </tr>
+                <?php 
+                $components = $db->get("Parts");
+                if ($db->count > 0)
+                  foreach ($components as $component) {
+                    $db->where('partId', $component["id"]);
+                    $cols = Array("SUM(count) as cnt");
+                    $count = $db->getOne("PartsInventoryItem", $cols);
+                    $db->where('id', $component['footprint']);
+                    $cols = Array('name');
+                    $footprintName = $db->getOne('PartFootprint', $cols);
+                    //print_r($count);
+                    print("<tr>");
+                    print("<td>" . $component["name"] . "</td>");
+                    print("<td>" . $count["cnt"] . "</td>");
+                    print("<td>" . $component["description"] . "</td>");
+                    print("<td>" . $footprintName["name"] . "</td>");
+                    print("<td>" . "" . "</td>");
+                    print("</tr>");
+                  }
+                ?>
+              </tbody></table>
+            </div>
+            <!-- /.box-body -->
+          </div>
+          <!-- /.box -->
+        </div>
+      </div>
 
       <!-- Your Page Content Here -->
 
@@ -357,7 +429,7 @@ desired effect
   <footer class="main-footer">
     <!-- To the right -->
     <div class="pull-right hidden-xs">
-      ThaNerd Parts <small>Version 0.1 beta</small>
+      <strong>ThaNerd</strong>Parts <small>Version 0.1 beta</small>
     </div>
     <!-- Default to the left -->
     <strong>Copyright &copy; 2017 <a href="http://www.thanerd.net/">ThaNerd.net</a>.</strong> All rights reserved.
